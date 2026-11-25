@@ -3,7 +3,7 @@
 Read this before exploring the code. It is meant to save re-reading the whole repo.
 
 ## What it is
-Free PDF tools that run 100% in the browser. Files are never uploaded. Static site on GitHub Pages (`https://yousafkhamza.github.io/pdfburrow/`), English only, global audience, monetised later with AdSense. Sibling project: `../gulfcalc`. Author: Yousaf K Hamza. **No AI/Claude credit anywhere in the repo, site or docs.** This file is git-ignored. The user commits and pushes themselves.
+Free PDF tools that run 100% in the browser. Files are never uploaded. Static site on GitHub Pages (`https://yousafkhamza.github.io/pdfburrow/`), English only, global audience, monetised later with AdSense. Sibling project: `../gulfcalc`. Author: Yousaf K Hamza. **No AI/Claude credit anywhere in the repo, site or docs.** The user commits and pushes themselves.
 
 ## Status (2026-11-25)
 Fully written and **never executed locally**: Node is blocked on this laptop (company Defender policy), so don't try to install it or work around that. CI is the only place code runs. The first CI runs will surface bugs; fix them from the logs the user pastes. Riskiest parts: the qpdf ESM wrapper (protect/unlock), Tesseract `pdf: true` output (searchable PDF), the compress-to-100 KB e2e test, and heic2any under the CSP (no HEIC fixture, so untested).
