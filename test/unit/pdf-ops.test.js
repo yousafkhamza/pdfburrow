@@ -222,7 +222,7 @@ describe('redaction and cleanup', () => {
     const text = await textOf(out);
     assert.equal(text[1].trim(), '');
     assert.match(text[0], /Public page 1/);
-    assert.ok(containsText(src, 'SECRET-123456'), 'control: the original contains the secret');
+    assert.match((await textOf(src))[1], /SECRET-123456/, 'control: the original contains the secret');
     assert.ok(!containsText(out, 'SECRET-123456'), 'redacted text must not remain anywhere in the file');
     assert.ok(!containsText(out, 'Secretname'), 'metadata is stripped');
   });

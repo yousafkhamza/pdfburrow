@@ -15,7 +15,8 @@ export default {
     const { bytes, errors } = await runQpdf(await bytesOf(entry), [`--password=${password}`, '--decrypt', '/in.pdf', '/out.pdf']);
     if (!bytes?.length) {
       const text = errors.join(' ');
-      if (/invalid password|password/i.test(text)) throw Object.assign(new Error('Wrong password'), { code: 'wrong-password' });
+      // qpdf doesn't always print a message; with an encrypted input, no output means the password was wrong.
+      if (/password/i.test(text) || entry.locked || !text) throw Object.assign(new Error('Wrong password'), { code: 'wrong-password' });
       throw new Error(errors.at(-1) || 'qpdf did not produce a file');
     }
     return {

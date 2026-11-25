@@ -106,7 +106,7 @@ jobs:
         env:
           SITE_URL: http://localhost:4173
       - name: Install Firefox and WebKit
-        run: npx playwright install --with-deps firefox webkit
+        run: npx playwright install --with-deps chromium firefox webkit
       - name: Run browser tests
         run: npx playwright test --project=firefox --project=webkit
       - name: Upload report
