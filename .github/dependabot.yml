@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pdf-libraries:
+        patterns: ['pdf-lib', 'pdfjs-dist', 'fflate', 'tesseract*', '@tesseract.js-data/*', 'heic2any', '@neslinesli93/qpdf-wasm']
+      test-tools:
+        patterns: ['@playwright/*', '@axe-core/*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

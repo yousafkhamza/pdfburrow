@@ -1,0 +1,187 @@
+name: CI and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Until package-lock.json is committed (see the "Lockfile" workflow), install the exact
+  # versions pinned in package.json; afterwards `npm ci` verifies every package's integrity.
+  INSTALL: if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+
+jobs:
+  test:
+    name: unit tests, build, page checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+      ADS_ENABLED: ${{ vars.ADS_ENABLED }}
+      ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+      ADSENSE_SLOT_TOOL: ${{ vars.ADSENSE_SLOT_TOOL }}
+      ADSENSE_SLOT_GUIDE: ${{ vars.ADSENSE_SLOT_GUIDE }}
+      ADSENSE_SLOT_HOME: ${{ vars.ADSENSE_SLOT_HOME }}
+      GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: eval "$INSTALL"
+      - name: Unit tests
+        run: npm test
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Build
+        run: npm run build
+      - name: Check pages, code and files
+        run: npm run check
+      - name: Upload site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  e2e:
+    name: browser tests (Chrome desktop + phone)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: eval "$INSTALL"
+      - name: Build for localhost
+        run: npm run build
+        env:
+          SITE_URL: http://localhost:4173
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        run: npx playwright test --project=chromium --project=mobile
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+
+  e2e-engines:
+    name: browser tests (Firefox + Safari engine)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Reported on every run; doesn't block deploys, so a quirk in one engine can be fixed
+    # without holding back a release. Check this job's result before each release.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: eval "$INSTALL"
+      - name: Build for localhost
+        run: npm run build
+        env:
+          SITE_URL: http://localhost:4173
+      - name: Install Firefox and WebKit
+        run: npx playwright install --with-deps firefox webkit
+      - name: Run browser tests
+        run: npx playwright test --project=firefox --project=webkit
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-engines
+          path: |
+            playwright-report
+            test-results
+          retention-days: 14
+
+  variants:
+    name: build variant (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: custom subdomain with ads
+            site_url: https://pdf.example.com
+            ads_enabled: 'true'
+            adsense_client: ca-pub-1234567890123456
+            slot: '1111111111'
+          - name: custom domain before AdSense approval
+            site_url: https://example.com
+            ads_enabled: 'false'
+            adsense_client: ca-pub-1234567890123456
+            slot: ''
+    env:
+      SITE_URL: ${{ matrix.site_url }}
+      ADS_ENABLED: ${{ matrix.ads_enabled }}
+      ADSENSE_CLIENT: ${{ matrix.adsense_client }}
+      ADSENSE_SLOT_TOOL: ${{ matrix.slot }}
+      ADSENSE_SLOT_GUIDE: ${{ matrix.slot }}
+      ADSENSE_SLOT_HOME: ${{ matrix.slot }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: eval "$INSTALL"
+      - name: Build
+        run: npm run build
+      - name: Check
+        run: npm run check
+
+  lint-workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.7
+        with:
+          args: -color
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [test, e2e, variants, lint-workflows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

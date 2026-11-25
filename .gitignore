@@ -1,0 +1,10 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+test/e2e/.fixtures/
+.DS_Store
+Thumbs.db
+*.log
+.env
+CLAUDE.md
