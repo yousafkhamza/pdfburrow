@@ -21,7 +21,7 @@ env:
 jobs:
   test:
     name: unit tests, build, page checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       SITE_URL: ${{ vars.SITE_URL }}
@@ -56,7 +56,7 @@ jobs:
 
   e2e:
     name: browser tests (Chrome desktop + phone)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
@@ -87,7 +87,7 @@ jobs:
 
   e2e-engines:
     name: browser tests (Firefox + Safari engine)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     # Reported on every run; doesn't block deploys, so a quirk in one engine can be fixed
     # without holding back a release. Check this job's result before each release.
@@ -121,7 +121,7 @@ jobs:
 
   variants:
     name: build variant (${{ matrix.name }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -159,7 +159,7 @@ jobs:
         run: npm run check
 
   lint-workflows:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
@@ -173,7 +173,7 @@ jobs:
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [test, e2e, variants, lint-workflows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       pages: write
