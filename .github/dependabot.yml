@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Major versions of the PDF libraries change file paths and APIs; upgrade those by hand.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       pdf-libraries:
         patterns: ['pdf-lib', 'pdfjs-dist', 'fflate', 'tesseract*', '@tesseract.js-data/*', 'heic2any', '@neslinesli93/qpdf-wasm']
