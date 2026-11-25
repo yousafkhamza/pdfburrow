@@ -159,7 +159,7 @@ test.describe('editing', () => {
     await page.fill('#opt-text', 'COPY FOR BANK ONLY');
     const out = await runAndDownload(page);
     const doc = await load(out.bytes);
-    for (const p of doc.getPages()) expect(p.node.Resources().lookup(PDFLib.PDFName.of('XObject'))).toBeTruthy();
+    for (const p of doc.getPages()) expect(p.node.Resources().lookup(PDFLib.PDFName.of('XObject'))?.keys().length ?? 0).toBeGreaterThan(0);
   });
 
   test('signs a page with a drawn signature', async ({ page }) => {
@@ -178,7 +178,7 @@ test.describe('editing', () => {
     await page.check('#sig-date');
     const out = await runAndDownload(page);
     const doc = await load(out.bytes);
-    expect(doc.getPage(0).node.Resources().lookup(PDFLib.PDFName.of('XObject'))).toBeTruthy();
+    expect(doc.getPage(0).node.Resources().lookup(PDFLib.PDFName.of('XObject'))?.keys().length ?? 0).toBeGreaterThan(0);
     expect((await textOf(out.bytes))[0]).toMatch(/\d{1,2} \w{3,4} \d{4}/);
   });
 

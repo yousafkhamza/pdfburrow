@@ -185,7 +185,7 @@ function toolApp(id, preset = null) {
     <button type="button" class="btn ghost" id="cancel">Cancel</button>
   </div>
   <div class="alert" id="error" role="alert" hidden></div>
-  <section class="done" id="done" hidden aria-labelledby="done-title"></section>
+  <section class="done" id="done" hidden aria-label="Result"></section>
   <noscript><p class="alert warn">This tool runs in your browser and needs JavaScript. Please turn it on to use pdfburrow.</p></noscript>
 </section>`;
 }

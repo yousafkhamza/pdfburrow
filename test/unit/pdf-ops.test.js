@@ -110,7 +110,7 @@ describe('page numbers, stamps and watermarks', () => {
   it('watermarks only the chosen pages', async () => {
     const out = await ops.watermark(lib, await makePdf({ pages: 3 }), { image: { bytes: png(100, 30), format: 'png', width: 300, height: 90 }, mode: 'tile', opacity: 0.2, pages: [2] });
     const doc = await load(out);
-    const has = (i) => !!doc.getPage(i).node.Resources().lookup(PDFLib.PDFName.of('XObject'));
+    const has = (i) => (doc.getPage(i).node.Resources().lookup(PDFLib.PDFName.of("XObject"))?.keys().length ?? 0) > 0;
     assert.deepEqual([has(0), has(1), has(2)], [false, true, false]);
   });
 });
